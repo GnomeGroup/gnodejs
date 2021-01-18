@@ -1,0 +1,40 @@
+{
+  "name": "gnodejs",
+  "version": "1.0.0",
+  "description": "NodeJS Manager Library",
+  "main": "gnodejs.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GnomeGroup/gnodejs.git"
+  },
+  "author": "Gnome Group, SRL",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GnomeGroup/gnodejs/issues"
+  },
+  "homepage": "https://github.com/GnomeGroup/gnodejs#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "child_process": "^1.0.2",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.2.1",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "mongodb": "^3.6.3",
+    "nodemailer": "^6.4.17",
+    "path": "^0.12.7",
+    "querystring": "^0.2.0",
+    "ssh2": "^0.8.9",
+    "strong-soap": "^3.0.0",
+    "universal-cookie-express": "^4.0.3"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "semi": false
+  }
+}
