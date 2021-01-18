@@ -40,21 +40,6 @@ gnodejs = {
     }
     return shellText.trim()
   },
-  coin: (name, command) => {
-    let cmdResult = gnodejs.shell(
-      '/usr/local/bin/' +
-        name.toLowerCase() +
-        '-cli -conf=/var/coins/' +
-        name +
-        '/' +
-        name.toLowerCase() +
-        '.conf -datadir=/var/coins/' +
-        name +
-        '/ ' +
-        command
-    )
-    return cmdResult.substr(0, 7) == 'error: ' ? cmdResult.substr(7) : cmdResult
-  },
   now: _ => new Date().getTime(),
   msFromNow: start => gnodejs.now() - start,
   md5: value =>
