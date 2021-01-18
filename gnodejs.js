@@ -3,20 +3,16 @@ const { execSync } = require('child_process')
 const bcrypt = require('bcryptjs')
 const cors = require('cors')
 const cMW = require('universal-cookie-express')
-const crypto = require('crypto')
 const express = require('express')
 const fs = require('fs')
 const http = require('http')
 const https = require('https')
-const qS = require('querystring')
 const fileUpload = require('express-fileupload')
 const SOAP = require('strong-soap').soap
 const SSH2 = require('ssh2')
 const eMailer = require('nodemailer')
 
 gnodejs = {
-  qS: qS,
-  crypto: crypto,
   app: null,
   TIME: {
     SECOND: 1000,
@@ -60,6 +56,7 @@ gnodejs = {
     return cmdResult.substr(0, 7) == 'error: ' ? cmdResult.substr(7) : cmdResult
   },
   now: _ => new Date().getTime(),
+  msFromNow: start => gnodejs.now() - start,
   md5: value =>
     gnodejs.crypto
       .createHash('md5')
