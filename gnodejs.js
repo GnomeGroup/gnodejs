@@ -42,16 +42,6 @@ gnodejs = {
   },
   now: _ => new Date().getTime(),
   msFromNow: start => gnodejs.now() - start,
-  md5: value =>
-    gnodejs.crypto
-      .createHash('md5')
-      .update(value)
-      .digest('hex'),
-  sha1: value =>
-    gnodejs.crypto
-      .createHash('sha1')
-      .update(value)
-      .digest('hex'),
   bcryptCreate: (plainTextPassword, saltRounds, callback) =>
     bcrypt.genSalt(saltRounds ? saltRounds : 10, (err, salt) =>
       bcrypt.hash(plainTextPassword, salt, (err, hash) => callback(hash))
