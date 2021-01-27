@@ -137,7 +137,9 @@ gnodejs = {
     homeFileLocation: null,
     keyCertFile: null,
     load: (keyCertFile, limitMB) => {
-      gnodejs.xpr.keyCertFile = '/etc/letsencrypt/live/' + keyCertFile
+      if (keyCertFile) {
+        gnodejs.xpr.keyCertFile = '/etc/letsencrypt/live/' + keyCertFile
+      }
       gnodejs.app = express()
       gnodejs.app.use(
         express.urlencoded({
