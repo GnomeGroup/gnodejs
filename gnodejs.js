@@ -8,6 +8,7 @@ const fs = require('fs')
 const http = require('http')
 const https = require('https')
 const fileUpload = require('express-fileupload')
+const bouncerObject = require('express-bouncer')
 const SOAP = require('strong-soap').soap
 const SSH2 = require('ssh2')
 const eMailer = require('nodemailer')
@@ -134,9 +135,10 @@ gnodejs = {
   checkEmail: email =>
     /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email),
   xpr: {
+    bouncer: null,
     homeFileLocation: null,
     keyCertFile: null,
-    load: (keyCertFile, limitMB) => {
+    load: (keyCertFile, limitMB, bouncerSettings) => {
       if (keyCertFile) {
         gnodejs.xpr.keyCertFile = '/etc/letsencrypt/live/' + keyCertFile
       }
@@ -156,6 +158,13 @@ gnodejs = {
       gnodejs.app.use(cors())
       gnodejs.app.use(cMW())
       gnodejs.app.use(fileUpload())
+      if (bouncerSettings) {
+        gnodejs.xpr.bouncer = bouncerObject(
+          bouncerSettings.min,
+          bouncerSettings.max,
+          bouncerSettings.free
+        )
+      }
     },
     start: (port, callback) =>
       (gnodejs.xpr.keyCertFile
@@ -170,43 +179,60 @@ gnodejs = {
           )
         : gnodejs.app
       ).listen(port, callback),
+    reply: (res, req, callback) =>
+      callback(
+        res,
+        gnodejs.getIP(req),
+        !req.body || gnodejs.stringify(req.body) == '{}'
+          ? !req.params || gnodejs.stringify(req.params) == '{}'
+            ? req.query
+            : req.params
+          : req.body,
+        req.universalCookies,
+        req.files,
+        req.hostname
+      ),
     add: (type, path, callback, sessionCheck) => {
       if (sessionCheck) {
-        gnodejs.app[type](path, (req, res, next) =>
-          sessionCheck(
-            req.headers.authorization && sessionCheck
-              ? req.headers.authorization.replace('bearer ', '')
-              : '',
-            session =>
-              callback(
-                res,
-                gnodejs.getIP(req),
-                !req.body || gnodejs.stringify(req.body) == '{}'
-                  ? !req.params || gnodejs.stringify(req.params) == '{}'
-                    ? req.query
-                    : req.params
-                  : req.body,
-                session,
-                req.files,
-                req.hostname
-              )
+        if (gnodejs.xpr.bouncer) {
+          gnodejs.app[type](path, gnodejs.xpr.bouncer.block, (req, res, next) =>
+            sessionCheck(
+              req.headers.authorization && sessionCheck
+                ? req.headers.authorization.replace('bearer ', '')
+                : '',
+              session =>
+                gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
+                  callback(res, ip, req, session, fle, host)
+                )
+            )
           )
-        )
+        } else {
+          gnodejs.app[type](path, (req, res, next) =>
+            sessionCheck(
+              req.headers.authorization && sessionCheck
+                ? req.headers.authorization.replace('bearer ', '')
+                : '',
+              session =>
+                gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
+                  callback(res, ip, req, session, fle, host)
+                )
+            )
+          )
+        }
       } else {
-        gnodejs.app[type](path, (req, res, next) =>
-          callback(
-            res,
-            gnodejs.getIP(req),
-            !req.body || gnodejs.stringify(req.body) == '{}'
-              ? !req.params || gnodejs.stringify(req.params) == '{}'
-                ? req.query
-                : req.params
-              : req.body,
-            req.universalCookies,
-            req.files,
-            req.hostname
+        if (gnodejs.xpr.bouncer) {
+          gnodejs.app[type](path, gnodejs.xpr.bouncer.block, (req, res, next) =>
+            gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
+              callback(res, ip, req, cke, fle, host)
+            )
           )
-        )
+        } else {
+          gnodejs.app[type](path, (req, res, next) =>
+            gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
+              callback(res, ip, req, cke, fle, host)
+            )
+          )
+        }
       }
     }
   },
