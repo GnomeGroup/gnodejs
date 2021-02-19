@@ -202,7 +202,9 @@ gnodejs = {
                 : '',
               session =>
                 gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-                  callback(res, ip, req, session, fle, host)
+                  callback(res, ip, req, session, fle, host, _ =>
+                    gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
+                  )
                 )
             )
           )
@@ -214,7 +216,9 @@ gnodejs = {
                 : '',
               session =>
                 gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-                  callback(res, ip, req, session, fle, host)
+                  callback(res, ip, req, session, fle, host, _ =>
+                    gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
+                  )
                 )
             )
           )
@@ -223,13 +227,17 @@ gnodejs = {
         if (gnodejs.xpr.bouncer) {
           gnodejs.app[type](path, gnodejs.xpr.bouncer.block, (req, res, next) =>
             gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-              callback(res, ip, req, cke, fle, host)
+              callback(res, ip, req, cke, fle, host, _ =>
+                gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
+              )
             )
           )
         } else {
           gnodejs.app[type](path, (req, res, next) =>
             gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-              callback(res, ip, req, cke, fle, host)
+              callback(res, ip, req, cke, fle, host, _ =>
+                gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
+              )
             )
           )
         }
