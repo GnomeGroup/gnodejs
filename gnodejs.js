@@ -44,14 +44,6 @@ gnodejs = {
   },
   now: _ => new Date().getTime(),
   msFromNow: start => gnodejs.now() - start,
-  bcryptCreate: (plainTextPassword, saltRounds, callback) =>
-    bcrypt.genSalt(saltRounds ? saltRounds : 10, (err, salt) =>
-      bcrypt.hash(plainTextPassword, salt, (err, hash) => callback(hash))
-    ),
-  bcryptCompare: (plainTextPassword, encryptedPassword, callback) =>
-    bcrypt.compare(plainTextPassword, encryptedPassword, (err, correct) =>
-      callback(correct, err)
-    ),
   isoDatetime: start => {
     let thisDateString = ''
     try {
@@ -166,33 +158,39 @@ gnodejs = {
         )
       }
     },
-    start: (port, callback) =>
-      (gnodejs.xpr.keyCertFile
-        ? https.createServer(
-            {
-              key: gnodejs.files.read(gnodejs.xpr.keyCertFile + '/privkey.pem'),
-              cert: gnodejs.files.read(
-                gnodejs.xpr.keyCertFile + '/fullchain.pem'
-              )
-            },
-            gnodejs.app
-          )
-        : gnodejs.app
-      ).listen(port, callback),
-    reply: (res, req, callback) =>
-      callback(
-        res,
-        gnodejs.getIP(req),
-        !req.body || gnodejs.stringify(req.body) == '{}'
-          ? !req.params || gnodejs.stringify(req.params) == '{}'
-            ? req.query
-            : req.params
-          : req.body,
-        req.universalCookies,
-        req.files,
-        req.hostname
+    start: port =>
+      new Promise(resolve => {
+        ;(gnodejs.xpr.keyCertFile
+          ? https.createServer(
+              {
+                key: gnodejs.files.read(
+                  gnodejs.xpr.keyCertFile + '/privkey.pem'
+                ),
+                cert: gnodejs.files.read(
+                  gnodejs.xpr.keyCertFile + '/fullchain.pem'
+                )
+              },
+              gnodejs.app
+            )
+          : gnodejs.app
+        ).listen(port, resolve)
+      }),
+    reply: (res, req) =>
+      new Promise(resolve =>
+        resolve(
+          res,
+          gnodejs.getIP(req),
+          !req.body || gnodejs.stringify(req.body) == '{}'
+            ? !req.params || gnodejs.stringify(req.params) == '{}'
+              ? req.query
+              : req.params
+            : req.body,
+          req.universalCookies,
+          req.files,
+          req.hostname
+        )
       ),
-    add: (type, path, callback, sessionCheck) => {
+    add: (type, path, runAction, sessionCheck) => {
       if (sessionCheck) {
         if (gnodejs.xpr.bouncer) {
           gnodejs.app[type](path, gnodejs.xpr.bouncer.block, (req, res, next) =>
@@ -202,7 +200,7 @@ gnodejs = {
                 : '',
               session =>
                 gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-                  callback(res, ip, req, session, fle, host, _ =>
+                  runAction(res, ip, req, session, fle, host, _ =>
                     gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
                   )
                 )
@@ -216,7 +214,7 @@ gnodejs = {
                 : '',
               session =>
                 gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-                  callback(res, ip, req, session, fle, host, _ =>
+                  runAction(res, ip, req, session, fle, host, _ =>
                     gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
                   )
                 )
@@ -227,7 +225,7 @@ gnodejs = {
         if (gnodejs.xpr.bouncer) {
           gnodejs.app[type](path, gnodejs.xpr.bouncer.block, (req, res, next) =>
             gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-              callback(res, ip, req, cke, fle, host, _ =>
+              runAction(res, ip, req, cke, fle, host, _ =>
                 gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
               )
             )
@@ -235,7 +233,7 @@ gnodejs = {
         } else {
           gnodejs.app[type](path, (req, res, next) =>
             gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-              callback(res, ip, req, cke, fle, host, _ =>
+              runAction(res, ip, req, cke, fle, host, _ =>
                 gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
               )
             )
@@ -244,50 +242,42 @@ gnodejs = {
       }
     }
   },
-  http: (
-    secure,
-    webHost,
-    webMethod,
-    webPort,
-    webHeader,
-    webPath,
-    webData,
-    callback
-  ) => {
-    try {
-      let webObj = {
-        host: webHost,
-        port: webPort,
-        method: webMethod,
-        path: webPath
-      }
-      if (webHeader) {
-        webObj.headers = webHeader
-      }
-      if (webData.formData) {
-        webData.formData = webData.formData
-        webData = null
-      }
-      let webReq = (secure ? https : http).request(webObj, res => {
-        res.setEncoding('utf8')
-        let webData = ''
-        res.on('data', httpsData => {
-          webData += httpsData
+  http: (secure, webHost, webMethod, webPort, webHeader, webPath, webData) =>
+    new Promise((resolve, reject) => {
+      try {
+        let webObj = {
+          host: webHost,
+          port: webPort,
+          method: webMethod,
+          path: webPath
+        }
+        if (webHeader) {
+          webObj.headers = webHeader
+        }
+        if (webData.formData) {
+          webData.formData = webData.formData
+          webData = null
+        }
+        let webReq = (secure ? https : http).request(webObj, res => {
+          res.setEncoding('utf8')
+          let webData = ''
+          res.on('data', httpsData => {
+            webData += httpsData
+          })
+          res.on('end', _ => resolve(webData))
+          res.on('error', e => reject(e.message))
         })
-        res.on('end', _ => callback(webData, false))
-        res.on('error', e => callback(e.message, true))
-      })
-      webReq.on('error', e => callback(e.message, true))
-      if (webReq && webData) {
-        webReq.write(
-          typeof webData == 'object' ? gnodejs.stringify(webData) : webData
-        )
+        webReq.on('error', e => reject(e.message))
+        if (webReq && webData) {
+          webReq.write(
+            typeof webData == 'object' ? gnodejs.stringify(webData) : webData
+          )
+        }
+        webReq.end()
+      } catch (e) {
+        reject(e.message)
       }
-      webReq.end()
-    } catch (e) {
-      callback(e.message, true)
-    }
-  },
+    }),
   session: {
     name: null,
     get: (size, cookies) => {
@@ -309,51 +299,59 @@ gnodejs = {
     rawTextPassword,
     pkData,
     passPhrase,
-    command,
-    callback
-  ) => {
-    let options = { host: ip, port: portNumber, username: user }
-    if (rawTextPassword && rawTextPassword.length > 0) {
-      options.password = rawTextPassword
-    } else if (pkData && pkData.length > 0) {
-      options.privateKey = pkData
-      if (passPhrase && passPhrase.length > 0) {
-        options.passphrase = passPhrase
-      }
-    }
-    let serverConnect = new SSH2.Client()
-    serverConnect.on('ready', _ => {
-      let commandsToRun = typeof command == 'string' ? [command] : command
-      let responseText = ''
-      let runNextServerCommand = _ => {
-        let thisCommand = commandsToRun.shift()
-        if (thisCommand) {
-          responseText += thisCommand + '\nRESPONSE\n'
-          serverConnect.exec(thisCommand + '\n', (err, stream) => {
-            if (err) {
-              runNextServerCommand()
-            } else {
-              stream.on('data', data => {
-                responseText += data.toString()
-              })
-              stream.stderr.on('data', data => {
-                responseText += data.toString()
-              })
-              stream.on('close', (code, signal) => runNextServerCommand())
-            }
-          })
-        } else {
-          serverConnect.end()
-          callback(null, responseText)
+    command
+  ) =>
+    new Promise((resolve, reject) => {
+      let options = { host: ip, port: portNumber, username: user }
+      if (rawTextPassword && rawTextPassword.length > 0) {
+        options.password = rawTextPassword
+      } else if (pkData && pkData.length > 0) {
+        options.privateKey = pkData
+        if (passPhrase && passPhrase.length > 0) {
+          options.passphrase = passPhrase
         }
       }
-      runNextServerCommand()
-    })
-    serverConnect.on('error', data => callback(data.toString(), null))
-    serverConnect.connect(options)
-  },
-  soap: (wsdlFile, callback) =>
-    SOAP.createClient(wsdlFile, {}, (err, client) => callback(client)),
+      let serverConnect = new SSH2.Client()
+      serverConnect.on('ready', _ => {
+        let commandsToRun = typeof command == 'string' ? [command] : command
+        let responseText = ''
+        let runNextServerCommand = _ => {
+          let thisCommand = commandsToRun.shift()
+          if (thisCommand) {
+            responseText += thisCommand + '\nRESPONSE\n'
+            serverConnect.exec(thisCommand + '\n', (err, stream) => {
+              if (err) {
+                runNextServerCommand()
+              } else {
+                stream.on('data', data => {
+                  responseText += data.toString()
+                })
+                stream.stderr.on('data', data => {
+                  responseText += data.toString()
+                })
+                stream.on('close', (code, signal) => runNextServerCommand())
+              }
+            })
+          } else {
+            serverConnect.end()
+            resolve(responseText)
+          }
+        }
+        runNextServerCommand()
+      })
+      serverConnect.on('error', data => reject(data.toString()))
+      serverConnect.connect(options)
+    }),
+  soap: wsdlFile =>
+    new Promise((resolve, reject) =>
+      SOAP.createClient(wsdlFile, {}, (err, client) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(client)
+        }
+      })
+    ),
   email: {
     account: null,
     transporter: null,
@@ -382,68 +380,70 @@ gnodejs = {
         }
       })
     },
-    send: (fromEmail, toEmail, subjectEmail, plainText, html, callback) => {
-      if (gnodejs.email.transporter) {
-        let options = { from: fromEmail, to: toEmail, subject: subjectEmail }
-        if (plainText) {
-          options.text = plainText
-        }
-        if (html) {
-          options.html = html
-        }
-        gnodejs.email.transporter.sendMail(options, callback)
-      } else {
-        callback('No SMTP connected', null)
-      }
-    }
-  },
-  selfDeploy: (sslCert, deployTo, pm2ProcessNumber, callback) => {
-    let app = express()
-    let sslKey = null
-    let sslCertData = null
-    let process = (req, res, next) => {
-      try {
-        console.log(
-          gnodejs.shell(
-            '/bin/sh ' +
-              __dirname +
-              '/gitDeploy.sh ' +
-              deployTo +
-              ' ' +
-              parseInt(pm2ProcessNumber).toString()
-          )
-        )
-      } catch (e) {
-        console.log(e)
-      }
-      res.end('')
-    }
-    app.post('/', process)
-    app.get('*', process)
-    if (fs.existsSync(sslCert + '/privkey.pem')) {
-      sslKey = fs.readFileSync(sslCert + '/privkey.pem', 'utf8')
-      if (sslKey && fs.existsSync(sslCert + '/fullchain.pem')) {
-        sslCertData = fs.readFileSync(sslCert + '/fullchain.pem', 'utf8')
-      }
-    }
-    if (sslKey && sslCertData) {
-      https
-        .createServer({ key: sslKey, cert: sslCertData }, app)
-        .listen(3420, _ => {
-          console.log('Githook enabled with SSL')
-          if (callback) {
-            callback()
+    send: (fromEmail, toEmail, subjectEmail, plainText, html) =>
+      new Promise((resolve, reject) => {
+        if (gnodejs.email.transporter) {
+          let options = { from: fromEmail, to: toEmail, subject: subjectEmail }
+          if (plainText) {
+            options.text = plainText
           }
-        })
-    } else {
-      http.createServer(app).listen(3420, _ => {
-        console.log('Githook enabled UNSECURE')
-        if (callback) {
-          callback()
+          if (html) {
+            options.html = html
+          }
+          gnodejs.email.transporter.sendMail(options, resolve)
+        } else {
+          reject('No SMTP connected')
         }
       })
-    }
   },
+  selfDeploy: (sslCert, deployTo, pm2ProcessNumber) =>
+    new Promise(resolve => {
+      let app = express()
+      let sslKey = null
+      let sslCertData = null
+      let process = (req, res, next) => {
+        try {
+          console.log(
+            gnodejs.shell(
+              '/bin/sh ' +
+                __dirname +
+                '/gitDeploy.sh ' +
+                deployTo +
+                ' ' +
+                parseInt(pm2ProcessNumber).toString()
+            )
+          )
+        } catch (e) {
+          console.log(e)
+        }
+        res.end('')
+      }
+      app.post('/', process)
+      app.get('*', process)
+      if (fs.existsSync(sslCert + '/privkey.pem')) {
+        sslKey = fs.readFileSync(sslCert + '/privkey.pem', 'utf8')
+        if (sslKey && fs.existsSync(sslCert + '/fullchain.pem')) {
+          sslCertData = fs.readFileSync(sslCert + '/fullchain.pem', 'utf8')
+        }
+      }
+      if (sslKey && sslCertData) {
+        https
+          .createServer({ key: sslKey, cert: sslCertData }, app)
+          .listen(3420, _ => {
+            console.log('Githook enabled with SSL')
+            if (resolve) {
+              resolve()
+            }
+          })
+      } else {
+        http.createServer(app).listen(3420, _ => {
+          console.log('Githook enabled UNSECURE')
+          if (resolve) {
+            resolve()
+          }
+        })
+      }
+    }),
   decodeBase64Image: dataString => {
     let matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
     let imageResponse = {}
