@@ -158,8 +158,8 @@ gnodejs = {
         )
       }
     },
-    start: (port, callback) => {
-      let expressObject = gnodejs.xpr.keyCertFile
+    start: (port, callback) =>
+      (gnodejs.xpr.keyCertFile
         ? https.createServer(
             {
               key: gnodejs.files.read(gnodejs.xpr.keyCertFile + '/privkey.pem'),
@@ -170,24 +170,21 @@ gnodejs = {
             gnodejs.app
           )
         : gnodejs.app
-      expressObject.listen(port, _ => callback())
-    },
-    reply: (res, req) =>
-      new Promise(resolve =>
-        resolve(
-          res,
-          gnodejs.getIP(req),
-          !req.body || gnodejs.stringify(req.body) == '{}'
-            ? !req.params || gnodejs.stringify(req.params) == '{}'
-              ? req.query
-              : req.params
-            : req.body,
-          req.universalCookies,
-          req.files,
-          req.hostname
-        )
+      ).listen(port, callback),
+    reply: (res, req, callback) =>
+      callback(
+        res,
+        gnodejs.getIP(req),
+        !req.body || gnodejs.stringify(req.body) == '{}'
+          ? !req.params || gnodejs.stringify(req.params) == '{}'
+            ? req.query
+            : req.params
+          : req.body,
+        req.universalCookies,
+        req.files,
+        req.hostname
       ),
-    add: (type, path, runAction, sessionCheck) => {
+    add: (type, path, callback, sessionCheck) => {
       if (sessionCheck) {
         if (gnodejs.xpr.bouncer) {
           gnodejs.app[type](path, gnodejs.xpr.bouncer.block, (req, res, next) =>
@@ -197,7 +194,7 @@ gnodejs = {
                 : '',
               session =>
                 gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-                  runAction(res, ip, req, session, fle, host, _ =>
+                  callback(res, ip, req, session, fle, host, _ =>
                     gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
                   )
                 )
@@ -211,7 +208,7 @@ gnodejs = {
                 : '',
               session =>
                 gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-                  runAction(res, ip, req, session, fle, host, _ =>
+                  callback(res, ip, req, session, fle, host, _ =>
                     gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
                   )
                 )
@@ -222,7 +219,7 @@ gnodejs = {
         if (gnodejs.xpr.bouncer) {
           gnodejs.app[type](path, gnodejs.xpr.bouncer.block, (req, res, next) =>
             gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-              runAction(res, ip, req, cke, fle, host, _ =>
+              callback(res, ip, req, cke, fle, host, _ =>
                 gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
               )
             )
@@ -230,7 +227,7 @@ gnodejs = {
         } else {
           gnodejs.app[type](path, (req, res, next) =>
             gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-              runAction(res, ip, req, cke, fle, host, _ =>
+              callback(res, ip, req, cke, fle, host, _ =>
                 gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
               )
             )
