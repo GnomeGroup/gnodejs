@@ -160,7 +160,7 @@ gnodejs = {
     },
     start: port =>
       new Promise(resolve => {
-        ;(gnodejs.xpr.keyCertFile
+        let expressObject = gnodejs.xpr.keyCertFile
           ? https.createServer(
               {
                 key: gnodejs.files.read(
@@ -173,7 +173,7 @@ gnodejs = {
               gnodejs.app
             )
           : gnodejs.app
-        ).listen(port, resolve)
+        expressObject.listen(port, resolve)
       }),
     reply: (res, req) =>
       new Promise(resolve =>
