@@ -158,19 +158,23 @@ gnodejs = {
         )
       }
     },
-    start: (port, callback) =>
-      (gnodejs.xpr.keyCertFile
-        ? https.createServer(
-            {
-              key: gnodejs.files.read(gnodejs.xpr.keyCertFile + '/privkey.pem'),
-              cert: gnodejs.files.read(
-                gnodejs.xpr.keyCertFile + '/fullchain.pem'
-              )
-            },
-            gnodejs.app
-          )
-        : gnodejs.app
-      ).listen(port, callback),
+    start: port =>
+      new Promise(resolve =>
+        (gnodejs.xpr.keyCertFile
+          ? https.createServer(
+              {
+                key: gnodejs.files.read(
+                  gnodejs.xpr.keyCertFile + '/privkey.pem'
+                ),
+                cert: gnodejs.files.read(
+                  gnodejs.xpr.keyCertFile + '/fullchain.pem'
+                )
+              },
+              gnodejs.app
+            )
+          : gnodejs.app
+        ).listen(port, resolve)
+      ),
     reply: (res, req, callback) =>
       callback(
         res,
