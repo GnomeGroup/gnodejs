@@ -158,7 +158,7 @@ gnodejs = {
         )
       }
     },
-    start: port => {
+    start: (port, callback) => {
       let expressObject = gnodejs.xpr.keyCertFile
         ? https.createServer(
             {
@@ -170,7 +170,7 @@ gnodejs = {
             gnodejs.app
           )
         : gnodejs.app
-      expressObject.listen(port, resolve)
+      expressObject.listen(port, callback)
     },
     reply: (res, req) =>
       new Promise(resolve =>
