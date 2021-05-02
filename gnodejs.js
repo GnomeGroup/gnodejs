@@ -170,7 +170,7 @@ gnodejs = {
             gnodejs.app
           )
         : gnodejs.app
-      expressObject.listen(port, callback)
+      expressObject.listen(port, _ => callback())
     },
     reply: (res, req) =>
       new Promise(resolve =>
