@@ -251,11 +251,11 @@ gnodejs = {
         }
       },
       ...(['GET', 'HEAD'].includes(webMethod.toUpperCase())
-        ? {
+        ? {}
+        : {
             body:
               typeof webData == 'object' ? gnodejs.stringify(webData) : webData
-          }
-        : {})
+          })
     }),
   session: {
     name: null,
