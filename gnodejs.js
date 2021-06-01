@@ -257,6 +257,22 @@ gnodejs = {
               typeof webData == 'object' ? gnodejs.stringify(webData) : webData
           })
     }),
+  fetch: (url, webMethod, webHeader, webData) =>
+    fetch(url, {
+      ...{
+        method: webMethod,
+        headers: {
+          ...(webHeader ? webHeader : {}),
+          ...(typeof webData == 'object' ? gnodejs.CONTENT_TYPE.json : {})
+        }
+      },
+      ...(['GET', 'HEAD'].includes(webMethod.toUpperCase())
+        ? {}
+        : {
+            body:
+              typeof webData == 'object' ? gnodejs.stringify(webData) : webData
+          })
+    }),
   session: {
     name: null,
     get: (size, cookies) => {
