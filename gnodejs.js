@@ -12,6 +12,7 @@ const bouncerObject = require('express-bouncer')
 const SOAP = require('strong-soap').soap
 const SSH2 = require('ssh2')
 const eMailer = require('nodemailer')
+const fetch = require('node-fetch')
 
 gnodejs = {
   app: null,
@@ -241,39 +242,12 @@ gnodejs = {
     }
   },
   http: (secure, webHost, webMethod, webPort, webHeader, webPath, webData) =>
-    new Promise((resolve, reject) => {
-      try {
-        let webObj = {
-          host: webHost,
-          port: webPort,
-          method: webMethod,
-          path: webPath
-        }
-        if (webHeader) {
-          webObj.headers = webHeader
-        }
-        if (webData.formData) {
-          webData.formData = webData.formData
-          webData = null
-        }
-        let webReq = (secure ? https : http).request(webObj, res => {
-          res.setEncoding('utf8')
-          let webData = ''
-          res.on('data', httpsData => {
-            webData += httpsData
-          })
-          res.on('end', _ => resolve(webData))
-          res.on('error', e => reject(e.message))
-        })
-        webReq.on('error', e => reject(e.message))
-        if (webReq && webData) {
-          webReq.write(
-            typeof webData == 'object' ? gnodejs.stringify(webData) : webData
-          )
-        }
-        webReq.end()
-      } catch (e) {
-        reject(e.message)
+    fetch('http' + (secure ? 's' : '') + '://' + webHost + webPath, {
+      method: webMethod,
+      body: typeof webData == 'object' ? gnodejs.stringify(webData) : webData,
+      headers: {
+        ...(webHeader ? webHeader : {}),
+        ...(typeof webData == 'object' ? gnodejs.CONTENT_TYPE.json : {})
       }
     }),
   session: {
