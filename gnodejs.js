@@ -243,12 +243,19 @@ gnodejs = {
   },
   http: (secure, webHost, webMethod, webPort, webHeader, webPath, webData) =>
     fetch('http' + (secure ? 's' : '') + '://' + webHost + webPath, {
-      method: webMethod,
-      body: typeof webData == 'object' ? gnodejs.stringify(webData) : webData,
-      headers: {
-        ...(webHeader ? webHeader : {}),
-        ...(typeof webData == 'object' ? gnodejs.CONTENT_TYPE.json : {})
-      }
+      ...{
+        method: webMethod,
+        headers: {
+          ...(webHeader ? webHeader : {}),
+          ...(typeof webData == 'object' ? gnodejs.CONTENT_TYPE.json : {})
+        }
+      },
+      ...(['GET', 'HEAD'].includes(webMethod.toUpperCase())
+        ? {
+            body:
+              typeof webData == 'object' ? gnodejs.stringify(webData) : webData
+          }
+        : {})
     }),
   session: {
     name: null,
