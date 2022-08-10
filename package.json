@@ -1,6 +1,6 @@
 {
   "name": "gnodejs",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "NodeJS Manager Library",
   "main": "gnodejs.js",
   "scripts": {
@@ -30,7 +30,7 @@
     "nodemailer": "^6.7.2",
     "path": "^0.12.7",
     "querystring": "^0.2.0",
-    "ssh2": "^1.5.0",
+    "ssh2": "^1.11.0",
     "strong-soap": "^3.0.0",
     "universal-cookie-express": "^4.0.3"
   },
