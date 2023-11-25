@@ -19,5 +19,52 @@ const main = async () => {
     null
   )
   console.log(result)
+
+  /*
+      let newPrices = await (
+        await APP.http(
+          true,
+          'www.gobanq.com',
+          'get',
+          443,
+          {},
+          '/p/prices.json',
+          {}
+        )
+      ).json()
+      let newPrices = await APP.axios.get(
+        true,
+        'www.gobanq.com',
+        'get',
+        443,
+        {},
+        '/p/prices.json',
+        {}
+      )
+
+
+
+      let result = await (
+        await APP.http(
+          true,
+          'api.telegram.org',
+          'POST',
+          443,
+          { 'Content-Type': 'application/json' },
+          '/bot' + API_KEY + '/' + operation,
+          packageToSend
+        )
+      ).json()
+      let result = await APP.http(
+        true,
+        'api.telegram.org',
+        'POST',
+        443,
+        { 'Content-Type': 'application/json' },
+        '/bot' + API_KEY + '/' + operation,
+        packageToSend
+      )
+
+      */
 }
 main()

@@ -251,10 +251,9 @@ gnodejs = {
         url:
           'http' +
           (ssl ? 's' : '') +
-          ':' +
-          (port ? ':' + port : '') +
-          '//' +
+          '://' +
           host +
+          (port ? ':' + port : '') +
           path,
         data,
         headers: {
