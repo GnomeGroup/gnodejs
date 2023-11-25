@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { execSync } = require('child_process')
+const childProcess = require('child_process')
 const cors = require('cors')
 const cMW = require('universal-cookie-express')
 const express = require('express')
@@ -10,10 +10,19 @@ const fileUpload = require('express-fileupload')
 const bouncerObject = require('express-bouncer')
 const SOAP = require('strong-soap').soap
 const SSH2 = require('ssh2')
-const eMailer = require('nodemailer')
+const nodemailer = require('nodemailer')
 
 gnodejs = {
   app: null,
+  axios,
+  childProcess,
+  express,
+  fs,
+  httpObject: http,
+  https,
+  soapObject: SOAP,
+  SSH2,
+  nodemailer,
   TIME: {
     SECOND: 1000,
     MINUTE: 60 * 1000,
@@ -32,7 +41,7 @@ gnodejs = {
     let shellText = ''
     let shellResult = null
     try {
-      shellResult = execSync(command, { stdio: 'pipe' })
+      shellResult = childProcess.execSync(command, { stdio: 'pipe' })
     } catch (e) {
       shellText = e.stderr.toString()
     }
@@ -243,7 +252,6 @@ gnodejs = {
       }
     },
   },
-  axios,
   http: async (ssl, host, method, port, header, path, data) =>
     (
       await axios({
@@ -352,7 +360,7 @@ gnodejs = {
     account: null,
     transporter: null,
     load: (hostName, portNumber, isSecure, authUser, authPassword) => {
-      gnodejs.email.transporter = eMailer.createTransport({
+      gnodejs.email.transporter = nodemailer.createTransport({
         host: hostName,
         port: portNumber ? parseInt(portNumber) : 465,
         secure: isSecure,
