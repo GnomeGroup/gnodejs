@@ -1,3 +1,4 @@
+const axios = require('axios')
 const { execSync } = require('child_process')
 const cors = require('cors')
 const cMW = require('universal-cookie-express')
@@ -10,7 +11,6 @@ const bouncerObject = require('express-bouncer')
 const SOAP = require('strong-soap').soap
 const SSH2 = require('ssh2')
 const eMailer = require('nodemailer')
-const fetch = require('node-fetch')
 
 gnodejs = {
   app: null,
@@ -131,6 +131,13 @@ gnodejs = {
         gnodejs.xpr.keyCertFile = '/etc/letsencrypt/live/' + keyCertFile
       }
       gnodejs.app = express()
+      gnodejs.app.use((err, req, res, next) => {
+        if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+          console.error(err)
+          return res.status(400).send({ status: 404, message: err.message })
+        }
+        next()
+      })
       gnodejs.app.use(
         express.urlencoded({
           limit: (limitMB ? limitMB : '50') + 'mb',
@@ -236,38 +243,38 @@ gnodejs = {
       }
     },
   },
-  http: (secure, webHost, webMethod, webPort, webHeader, webPath, webData) =>
-    fetch('http' + (secure ? 's' : '') + '://' + webHost + webPath, {
-      ...{
-        method: webMethod,
+  axios,
+  http: async (ssl, host, method, port, header, path, data) =>
+    (
+      await axios({
+        method,
+        url:
+          'http' +
+          (ssl ? 's' : '') +
+          ':' +
+          (port ? ':' + port : '') +
+          '//' +
+          host +
+          path,
+        data,
         headers: {
-          ...(webHeader ? webHeader : {}),
-          ...(typeof webData == 'object' ? gnodejs.CONTENT_TYPE.json : {}),
+          ...(header ? header : {}),
+          ...(typeof data == 'object' ? gnodejs.CONTENT_TYPE.json : {}),
         },
-      },
-      ...(['GET', 'HEAD'].includes(webMethod.toUpperCase())
-        ? {}
-        : {
-            body:
-              typeof webData == 'object' ? gnodejs.stringify(webData) : webData,
-          }),
-    }),
-  fetch: (url, webMethod, webHeader, webData) =>
-    fetch(url, {
-      ...{
-        method: webMethod,
+      })
+    ).data,
+  fetch: async (url, method, header, data) =>
+    (
+      await axios({
+        method,
+        url,
+        data,
         headers: {
-          ...(webHeader ? webHeader : {}),
-          ...(typeof webData == 'object' ? gnodejs.CONTENT_TYPE.json : {}),
+          ...(header ? header : {}),
+          ...(typeof data == 'object' ? gnodejs.CONTENT_TYPE.json : {}),
         },
-      },
-      ...(['GET', 'HEAD'].includes(webMethod.toUpperCase())
-        ? {}
-        : {
-            body:
-              typeof webData == 'object' ? gnodejs.stringify(webData) : webData,
-          }),
-    }),
+      })
+    ).data,
   session: {
     name: null,
     get: (size, cookies) => {
