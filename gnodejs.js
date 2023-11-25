@@ -307,7 +307,6 @@ gnodejs = {
           options.passphrase = passPhrase
         }
       }
-      console.log(options)
       let serverConnect = new SSH2.Client()
       serverConnect.on('ready', (_) => {
         let commandsToRun = typeof command == 'string' ? [command] : command
@@ -393,54 +392,6 @@ gnodejs = {
         }
       }),
   },
-  selfDeploy: (sslCert, deployTo, pm2ProcessNumber) =>
-    new Promise((resolve) => {
-      let app = express()
-      let sslKey = null
-      let sslCertData = null
-      let process = (req, res, next) => {
-        try {
-          console.log(
-            gnodejs.shell(
-              '/bin/sh ' +
-                __dirname +
-                '/gitDeploy.sh ' +
-                deployTo +
-                ' ' +
-                parseInt(pm2ProcessNumber).toString()
-            )
-          )
-        } catch (e) {
-          console.log(e)
-        }
-        res.end('')
-      }
-      app.post('/', process)
-      app.get('*', process)
-      if (fs.existsSync(sslCert + '/privkey.pem')) {
-        sslKey = fs.readFileSync(sslCert + '/privkey.pem', 'utf8')
-        if (sslKey && fs.existsSync(sslCert + '/fullchain.pem')) {
-          sslCertData = fs.readFileSync(sslCert + '/fullchain.pem', 'utf8')
-        }
-      }
-      if (sslKey && sslCertData) {
-        https
-          .createServer({ key: sslKey, cert: sslCertData }, app)
-          .listen(3420, (_) => {
-            console.log('Githook enabled with SSL')
-            if (resolve) {
-              resolve()
-            }
-          })
-      } else {
-        http.createServer(app).listen(3420, (_) => {
-          console.log('Githook enabled UNSECURE')
-          if (resolve) {
-            resolve()
-          }
-        })
-      }
-    }),
   decodeBase64Image: (dataString) => {
     let matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
     let imageResponse = {}

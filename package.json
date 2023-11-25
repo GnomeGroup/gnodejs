@@ -1,6 +1,6 @@
 {
   "name": "gnodejs",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "NodeJS Manager Library",
   "main": "gnodejs.js",
   "scripts": {
