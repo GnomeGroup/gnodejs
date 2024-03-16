@@ -12,7 +12,7 @@ const SOAP = require('strong-soap').soap
 const SSH2 = require('ssh2')
 const nodemailer = require('nodemailer')
 
-gnodejs = {
+const gnodejs = {
   app: null,
   axios,
   childProcess,
@@ -50,7 +50,7 @@ gnodejs = {
     }
     return shellText.trim()
   },
-  now: (_) => new Date().getTime(),
+  now: () => new Date().getTime(),
   msFromNow: (start) => gnodejs.now() - start,
   isoDatetime: (start) => {
     let thisDateString = ''
@@ -127,7 +127,7 @@ gnodejs = {
   },
   checkIP: (ip) =>
     /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
-      ip
+      ip,
     ),
   checkEmail: (email) =>
     /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email),
@@ -151,13 +151,13 @@ gnodejs = {
         express.urlencoded({
           limit: (limitMB ? limitMB : '50') + 'mb',
           extended: false,
-        })
+        }),
       )
       gnodejs.app.use(
         express.json({
           limit: (limitMB ? limitMB : '50') + 'mb',
           extended: false,
-        })
+        }),
       )
       gnodejs.app.use(cors())
       gnodejs.app.use(cMW())
@@ -166,7 +166,7 @@ gnodejs = {
         gnodejs.xpr.bouncer = bouncerObject(
           bouncerSettings.min,
           bouncerSettings.max,
-          bouncerSettings.free
+          bouncerSettings.free,
         )
       }
     },
@@ -176,16 +176,16 @@ gnodejs = {
           ? https.createServer(
               {
                 key: gnodejs.files.read(
-                  gnodejs.xpr.keyCertFile + '/privkey.pem'
+                  gnodejs.xpr.keyCertFile + '/privkey.pem',
                 ),
                 cert: gnodejs.files.read(
-                  gnodejs.xpr.keyCertFile + '/fullchain.pem'
+                  gnodejs.xpr.keyCertFile + '/fullchain.pem',
                 ),
               },
-              gnodejs.app
+              gnodejs.app,
             )
           : gnodejs.app
-        ).listen(port, resolve)
+        ).listen(port, resolve),
       ),
     reply: (res, req, callback) =>
       callback(
@@ -198,7 +198,7 @@ gnodejs = {
           : req.body,
         req.universalCookies,
         req.files,
-        req.hostname
+        req.hostname,
       ),
     add: (type, path, callback, sessionCheck) => {
       if (sessionCheck) {
@@ -210,11 +210,11 @@ gnodejs = {
                 : '',
               (session) =>
                 gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-                  callback(res, ip, req, session, fle, host, (_) =>
-                    gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
-                  )
-                )
-            )
+                  callback(res, ip, req, session, fle, host, () =>
+                    gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null,
+                  ),
+                ),
+            ),
           )
         } else {
           gnodejs.app[type](path, (req, res, next) =>
@@ -224,29 +224,29 @@ gnodejs = {
                 : '',
               (session) =>
                 gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-                  callback(res, ip, req, session, fle, host, (_) =>
-                    gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
-                  )
-                )
-            )
+                  callback(res, ip, req, session, fle, host, () =>
+                    gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null,
+                  ),
+                ),
+            ),
           )
         }
       } else {
         if (gnodejs.xpr.bouncer) {
           gnodejs.app[type](path, gnodejs.xpr.bouncer.block, (req, res, next) =>
             gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-              callback(res, ip, req, cke, fle, host, (_) =>
-                gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
-              )
-            )
+              callback(res, ip, req, cke, fle, host, () =>
+                gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null,
+              ),
+            ),
           )
         } else {
           gnodejs.app[type](path, (req, res, next) =>
             gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
-              callback(res, ip, req, cke, fle, host, (_) =>
-                gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
-              )
-            )
+              callback(res, ip, req, cke, fle, host, () =>
+                gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null,
+              ),
+            ),
           )
         }
       }
@@ -303,7 +303,7 @@ gnodejs = {
     rawTextPassword,
     pkData,
     passPhrase,
-    command
+    command,
   ) =>
     new Promise((resolve, reject) => {
       let options = { host: ip, port: portNumber, username: user }
@@ -316,10 +316,10 @@ gnodejs = {
         }
       }
       let serverConnect = new SSH2.Client()
-      serverConnect.on('ready', (_) => {
+      serverConnect.on('ready', () => {
         let commandsToRun = typeof command == 'string' ? [command] : command
         let responseText = ''
-        let runNextServerCommand = (_) => {
+        let runNextServerCommand = () => {
           let thisCommand = commandsToRun.shift()
           if (thisCommand) {
             responseText += thisCommand + '\nRESPONSE\n'
@@ -354,7 +354,7 @@ gnodejs = {
         } else {
           resolve(client)
         }
-      })
+      }),
     ),
   email: {
     account: null,
@@ -371,15 +371,15 @@ gnodejs = {
         if (!success) {
           gnodejs.email.transporter = null
           setTimeout(
-            (_) =>
+            () =>
               gnodejs.email.load(
                 hostName,
                 portNumber,
                 isSecure,
                 authUser,
-                authPassword
+                authPassword,
               ),
-            10 * 60 * 1000
+            10 * 60 * 1000,
           )
         }
       })

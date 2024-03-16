@@ -9,7 +9,7 @@ const main = async () => {
     null,
     '/var/privateKey.pem',
     null,
-    'date'
+    'date',
   )
   console.log('SSH Connected')
   console.log(result)

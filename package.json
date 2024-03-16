@@ -1,6 +1,6 @@
 {
   "name": "gnodejs",
-  "version": "3.0.4",
+  "version": "3.1.0",
   "description": "NodeJS Manager Library",
   "main": "gnodejs.js",
   "scripts": {
@@ -16,25 +16,25 @@
     "url": "https://github.com/GnomeGroup/gnodejs/issues"
   },
   "homepage": "https://github.com/GnomeGroup/gnodejs#readme",
-  "dependencies": {
-    "axios": "^1.6.2",
-    "child_process": "^1.0.2",
-    "cors": "^2.8.5",
-    "eslint": "^8.35.0",
-    "express": "^4.18.2",
-    "express-bouncer": "^0.2.0",
-    "express-fileupload": "^1.4.3",
-    "fs": "^0.0.1-security",
-    "http": "^0.0.1-security",
-    "https": "^1.0.0",
-    "nodemailer": "^6.9.7",
-    "prettier": "^2.8.4",
-    "ssh2": "^1.14.0",
-    "strong-soap": "^3.5.6",
-    "universal-cookie-express": "^6.1.1"
-  },
   "prettier": {
     "singleQuote": true,
     "semi": false
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "child_process": "^1.0.2",
+    "cors": "^2.8.5",
+    "eslint": "^8.57.0",
+    "express": "^4.18.3",
+    "express-bouncer": "^0.2.0",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "nodemailer": "^6.9.12",
+    "prettier": "^3.2.5",
+    "prettier-eslint": "^16.3.0",
+    "ssh2": "^1.15.0",
+    "strong-soap": "^4.0.3",
+    "universal-cookie-express": "^7.1.0"
   }
 }
