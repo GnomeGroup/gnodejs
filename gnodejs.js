@@ -135,7 +135,7 @@ const gnodejs = {
     bouncer: null,
     homeFileLocation: null,
     keyCertFile: null,
-    load: (keyCertFile, limitMB, bouncerSettings) => {
+    load: (keyCertFile, limitMB, bouncerSettings, skipCors) => {
       if (keyCertFile) {
         gnodejs.xpr.keyCertFile = '/etc/letsencrypt/live/' + keyCertFile
       }
@@ -159,7 +159,7 @@ const gnodejs = {
           extended: false,
         }),
       )
-      gnodejs.app.use(cors())
+      if (!skipCors) gnodejs.app.use(cors())
       gnodejs.app.use(cMW())
       gnodejs.app.use(fileUpload())
       if (bouncerSettings) {
