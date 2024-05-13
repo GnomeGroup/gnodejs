@@ -142,7 +142,7 @@ const gnodejs = {
       gnodejs.app = express()
       gnodejs.app.use((err, req, res, next) => {
         if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-          console.error(err)
+          console.error({ err, originalUrl: req.originalUrl, query: req.query })
           return res.status(400).send({ status: 404, message: err.message })
         }
         next()
