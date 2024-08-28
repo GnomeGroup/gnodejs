@@ -30,12 +30,12 @@ const gnodejs = {
     DAY: 24 * 60 * 60 * 1000,
     WEEK: 7 * 24 * 60 * 60 * 1000,
     MONTH: 30 * 24 * 60 * 60 * 1000,
-    YEAR: 365 * 24 * 60 * 60 * 1000,
+    YEAR: 365 * 24 * 60 * 60 * 1000
   },
   CONTENT_TYPE: {
     html: { 'Content-Type': 'text/html' },
     plain: { 'Content-Type': 'text/plain' },
-    json: { 'Content-Type': 'application/json' },
+    json: { 'Content-Type': 'application/json' }
   },
   shell: (command) => {
     let shellText = ''
@@ -111,7 +111,7 @@ const gnodejs = {
     append: (fileName, fileData) => fs.appendFileSync(fileName, fileData),
     copy: (sourceFile, destFile) => fs.copyFileSync(sourceFile, destFile),
     untar: (fileName, extractTo) =>
-      fs.createReadStream(fileName).pipe(gunzip()).pipe(tar.extract(extractTo)),
+      fs.createReadStream(fileName).pipe(gunzip()).pipe(tar.extract(extractTo))
   },
   getIP: (req) => {
     let thisIP =
@@ -127,7 +127,7 @@ const gnodejs = {
   },
   checkIP: (ip) =>
     /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
-      ip,
+      ip
     ),
   checkEmail: (email) =>
     /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email),
@@ -150,14 +150,14 @@ const gnodejs = {
       gnodejs.app.use(
         express.urlencoded({
           limit: (limitMB ? limitMB : '50') + 'mb',
-          extended: false,
-        }),
+          extended: false
+        })
       )
       gnodejs.app.use(
         express.json({
           limit: (limitMB ? limitMB : '50') + 'mb',
-          extended: false,
-        }),
+          extended: false
+        })
       )
       if (!skipCors) gnodejs.app.use(cors())
       gnodejs.app.use(cMW())
@@ -166,7 +166,7 @@ const gnodejs = {
         gnodejs.xpr.bouncer = bouncerObject(
           bouncerSettings.min,
           bouncerSettings.max,
-          bouncerSettings.free,
+          bouncerSettings.free
         )
       }
     },
@@ -176,16 +176,16 @@ const gnodejs = {
           ? https.createServer(
               {
                 key: gnodejs.files.read(
-                  gnodejs.xpr.keyCertFile + '/privkey.pem',
+                  gnodejs.xpr.keyCertFile + '/privkey.pem'
                 ),
                 cert: gnodejs.files.read(
-                  gnodejs.xpr.keyCertFile + '/fullchain.pem',
-                ),
+                  gnodejs.xpr.keyCertFile + '/fullchain.pem'
+                )
               },
-              gnodejs.app,
+              gnodejs.app
             )
           : gnodejs.app
-        ).listen(port, resolve),
+        ).listen(port, resolve)
       ),
     reply: (res, req, callback) =>
       callback(
@@ -199,6 +199,7 @@ const gnodejs = {
         req.universalCookies,
         req.files,
         req.hostname,
+        req.headers
       ),
     add: (type, path, callback, sessionCheck) => {
       if (sessionCheck) {
@@ -211,10 +212,10 @@ const gnodejs = {
               (session) =>
                 gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
                   callback(res, ip, req, session, fle, host, () =>
-                    gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null,
-                  ),
-                ),
-            ),
+                    gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
+                  )
+                )
+            )
           )
         } else {
           gnodejs.app[type](path, (req, res, next) =>
@@ -225,10 +226,10 @@ const gnodejs = {
               (session) =>
                 gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
                   callback(res, ip, req, session, fle, host, () =>
-                    gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null,
-                  ),
-                ),
-            ),
+                    gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
+                  )
+                )
+            )
           )
         }
       } else {
@@ -236,21 +237,21 @@ const gnodejs = {
           gnodejs.app[type](path, gnodejs.xpr.bouncer.block, (req, res, next) =>
             gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
               callback(res, ip, req, cke, fle, host, () =>
-                gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null,
-              ),
-            ),
+                gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
+              )
+            )
           )
         } else {
           gnodejs.app[type](path, (req, res, next) =>
             gnodejs.xpr.reply(res, req, (res, ip, req, cke, fle, host) =>
               callback(res, ip, req, cke, fle, host, () =>
-                gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null,
-              ),
-            ),
+                gnodejs.xpr.bouncer ? gnodejs.xpr.bouncer.reset(req) : null
+              )
+            )
           )
         }
       }
-    },
+    }
   },
   http: async (ssl, host, method, port, header, path, data) =>
     (
@@ -266,8 +267,8 @@ const gnodejs = {
         data,
         headers: {
           ...(header ? header : {}),
-          ...(typeof data == 'object' ? gnodejs.CONTENT_TYPE.json : {}),
-        },
+          ...(typeof data == 'object' ? gnodejs.CONTENT_TYPE.json : {})
+        }
       })
     ).data,
   fetch: async (url, method, header, data) =>
@@ -278,8 +279,8 @@ const gnodejs = {
         data,
         headers: {
           ...(header ? header : {}),
-          ...(typeof data == 'object' ? gnodejs.CONTENT_TYPE.json : {}),
-        },
+          ...(typeof data == 'object' ? gnodejs.CONTENT_TYPE.json : {})
+        }
       })
     ).data,
   session: {
@@ -294,7 +295,7 @@ const gnodejs = {
         cookies.set(gnodejs.session.name, sessionID)
       }
       return sessionID
-    },
+    }
   },
   ssh_shell: (
     ip,
@@ -303,7 +304,7 @@ const gnodejs = {
     rawTextPassword,
     pkData,
     passPhrase,
-    command,
+    command
   ) =>
     new Promise((resolve, reject) => {
       let options = { host: ip, port: portNumber, username: user }
@@ -354,7 +355,7 @@ const gnodejs = {
         } else {
           resolve(client)
         }
-      }),
+      })
     ),
   email: {
     account: null,
@@ -365,7 +366,7 @@ const gnodejs = {
         port: portNumber ? parseInt(portNumber) : 465,
         secure: isSecure,
         auth: { user: authUser, pass: authPassword },
-        tls: { rejectUnauthorized: false },
+        tls: { rejectUnauthorized: false }
       })
       gnodejs.email.transporter.verify((error, success) => {
         if (!success) {
@@ -377,9 +378,9 @@ const gnodejs = {
                 portNumber,
                 isSecure,
                 authUser,
-                authPassword,
+                authPassword
               ),
-            10 * 60 * 1000,
+            10 * 60 * 1000
           )
         }
       })
@@ -398,7 +399,7 @@ const gnodejs = {
         } else {
           reject('No SMTP connected')
         }
-      }),
+      })
   },
   decodeBase64Image: (dataString) => {
     let matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
@@ -420,7 +421,7 @@ const gnodejs = {
     } catch (error) {
       return [error, null]
     }
-  },
+  }
 }
 
 module.exports = gnodejs

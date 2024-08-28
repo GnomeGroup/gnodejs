@@ -1,6 +1,6 @@
 {
   "name": "gnodejs",
-  "version": "3.1.4",
+  "version": "3.1.5",
   "description": "NodeJS Manager Library",
   "main": "gnodejs.js",
   "scripts": {
@@ -18,7 +18,8 @@
   "homepage": "https://github.com/GnomeGroup/gnodejs#readme",
   "prettier": {
     "singleQuote": true,
-    "semi": false
+    "semi": false,
+    "trailingComma": "none"
   },
   "dependencies": {
     "axios": "^1.6.8",

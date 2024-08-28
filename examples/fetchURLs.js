@@ -8,7 +8,7 @@ const main = async () => {
     null,
     null,
     '/p/prices.json',
-    null,
+    null
   )
   console.log(result)
 
@@ -16,7 +16,7 @@ const main = async () => {
     'https://www.gobanq.com/p/prices.json',
     'GET',
     null,
-    null,
+    null
   )
   console.log(result)
 
