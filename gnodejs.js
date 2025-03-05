@@ -199,7 +199,8 @@ const gnodejs = {
         req.universalCookies,
         req.files,
         req.hostname,
-        req.headers
+        req.headers,
+        req.rawBody
       ),
     add: (type, path, callback, sessionCheck) => {
       if (sessionCheck) {
