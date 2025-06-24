@@ -140,23 +140,46 @@ const gnodejs = {
         gnodejs.xpr.keyCertFile = '/etc/letsencrypt/live/' + keyCertFile
       }
       gnodejs.app = express()
+      // ─── 1) Enhanced JSON parse‐error handler ───────────────────────────────────
       gnodejs.app.use((err, req, res, next) => {
         if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-          console.error({ err, originalUrl: req.originalUrl, query: req.query })
-          return res.status(400).send({ status: 404, message: err.message })
+          console.error('❌ JSON SyntaxError:', err.message)
+          console.error('→ URL:',     req.originalUrl)
+          console.error('→ Query:',   req.query)
+          console.error('→ Params:',  req.params)
+          console.error('→ Headers:', req.headers)
+          console.error('→ Raw body:', req.rawBody)
+          return res.status(400).json({
+            status: 400,
+            message: err.message,
+            request: {
+              url:     req.originalUrl,
+              query:   req.query,
+              params:  req.params,
+              headers: req.headers,
+              body:    req.rawBody
+            }
+          })
         }
         next()
       })
+      // ─── 2) Body parsers with raw‐body capture ─────────────────────────────────
       gnodejs.app.use(
         express.urlencoded({
-          limit: (limitMB ? limitMB : '50') + 'mb',
-          extended: false
+          limit:   (limitMB || '50') + 'mb',
+          extended:false,
+          verify:  (req, res, buf, encoding) => {
+            req.rawBody = buf.toString(encoding || 'utf8')
+          }
         })
       )
       gnodejs.app.use(
         express.json({
-          limit: (limitMB ? limitMB : '50') + 'mb',
-          extended: false
+          limit:   (limitMB || '50') + 'mb',
+          extended:false,
+          verify:  (req, res, buf, encoding) => {
+            req.rawBody = buf.toString(encoding || 'utf8')
+          }
         })
       )
       if (!skipCors) gnodejs.app.use(cors())
