@@ -140,44 +140,20 @@ const gnodejs = {
         gnodejs.xpr.keyCertFile = '/etc/letsencrypt/live/' + keyCertFile
       }
       gnodejs.app = express()
-      // ─── 1) Enhanced JSON parse‐error handler ───────────────────────────────────
-      gnodejs.app.use((err, req, res, next) => {
-        if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-          console.error('❌ JSON SyntaxError:', err.message)
-          console.error('→ URL:',     req.originalUrl)
-          console.error('→ Query:',   req.query)
-          console.error('→ Params:',  req.params)
-          console.error('→ Headers:', req.headers)
-          console.error('→ Raw body:', req.rawBody)
-          return res.status(400).json({
-            status: 400,
-            message: err.message,
-            request: {
-              url:     req.originalUrl,
-              query:   req.query,
-              params:  req.params,
-              headers: req.headers,
-              body:    req.rawBody
-            }
-          })
-        }
-        next()
-      })
-      // ─── 2) Body parsers with raw‐body capture ─────────────────────────────────
       gnodejs.app.use(
         express.urlencoded({
-          limit:   (limitMB || '50') + 'mb',
-          extended:false,
-          verify:  (req, res, buf, encoding) => {
+          limit: (limitMB || '50') + 'mb',
+          extended: false,
+          verify: (req, res, buf, encoding) => {
             req.rawBody = buf.toString(encoding || 'utf8')
           }
         })
       )
       gnodejs.app.use(
         express.json({
-          limit:   (limitMB || '50') + 'mb',
-          extended:false,
-          verify:  (req, res, buf, encoding) => {
+          limit: (limitMB || '50') + 'mb',
+          extended: false,
+          verify: (req, res, buf, encoding) => {
             req.rawBody = buf.toString(encoding || 'utf8')
           }
         })
@@ -185,6 +161,35 @@ const gnodejs = {
       if (!skipCors) gnodejs.app.use(cors())
       gnodejs.app.use(cMW())
       gnodejs.app.use(fileUpload())
+      gnodejs.app.use((err, req, res, next) => {
+        if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+          console.error('JSON Parse Error:', err.message)
+          console.error('Raw body:', req.rawBody)
+          console.error(
+            'Raw body length:',
+            req.rawBody ? req.rawBody.length : 0
+          )
+          if (req.rawBody && req.rawBody.length >= 110) {
+            console.error(
+              'Character at position 110:',
+              JSON.stringify(req.rawBody[110])
+            )
+            console.error(
+              'Bytes around position 110:',
+              req.rawBody.substring(100, 120)
+            )
+          }
+          return res.status(400).json({
+            error: 'Invalid JSON',
+            message: err.message,
+            position: err.message.match(/position (\d+)/)
+              ? parseInt(err.message.match(/position (\d+)/)[1])
+              : null,
+            rawBody: req.rawBody
+          })
+        }
+        next()
+      })
       if (bouncerSettings) {
         gnodejs.xpr.bouncer = bouncerObject(
           bouncerSettings.min,
